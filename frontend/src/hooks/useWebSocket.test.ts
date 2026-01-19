@@ -29,7 +29,7 @@ class MockWebSocket {
     }
   }
 
-  send(data: string) {
+  send(_data: string) {
     // Mock send
   }
 }
@@ -39,15 +39,15 @@ describe('useWebSocket', () => {
 
   beforeEach(() => {
     // Store original WebSocket
-    originalWebSocket = global.WebSocket;
+    originalWebSocket = globalThis.WebSocket;
     // Replace global WebSocket
-    (global as any).WebSocket = MockWebSocket;
+    (globalThis as any).WebSocket = MockWebSocket;
     vi.useFakeTimers();
   });
 
   afterEach(() => {
     // Restore original WebSocket
-    (global as any).WebSocket = originalWebSocket;
+    (globalThis as any).WebSocket = originalWebSocket;
     vi.useRealTimers();
   });
 
