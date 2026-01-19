@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  kubevision:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: kubevision
+    ports:
+      - "8080:8080"
+    volumes:
+      # Windows Docker Desktop uses named pipe
+      - //var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - PORT=8080
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+      - AUTH_ENABLED=false
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks:
+      - kubevision-network
+
+networks:
+  kubevision-network:
+    driver: bridge
+
+
+
+

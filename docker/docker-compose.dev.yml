@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  kubevision-backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: kubevision-backend-dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../backend:/app
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - PORT=8080
+      - LOG_LEVEL=debug
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173
+    command: air -c .air.toml
+    networks:
+      - kubevision-dev-network
+
+  kubevision-frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: kubevision-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    command: npm run dev
+    networks:
+      - kubevision-dev-network
+
+networks:
+  kubevision-dev-network:
+    driver: bridge
+

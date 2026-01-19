@@ -1,0 +1,53 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go
+*.test
+*.out
+
+# Frontend
+frontend/dist/
+frontend/.vite/
+
+# Backend
+backend/kubevision
+backend/server.exe
+backend/*.exe
+
+# Sensitive files
+*.pem
+*.key
+*.crt
+credentials.*
+secrets.*
+*.secret
+

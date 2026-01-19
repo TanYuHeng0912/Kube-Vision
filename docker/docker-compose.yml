@@ -1,0 +1,40 @@
+services:
+  kubevision:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: kubevision
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Remove DOCKER_HOST to let Docker client auto-detect
+      # On Windows Docker Desktop, it will use the socket from the volume mount
+      - PORT=8080
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+      - AUTH_ENABLED=false
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    user: "0:0"  # Run as root to access Docker socket
+    # read_only: true  # Disabled to allow socket access
+    tmpfs:
+      - /tmp
+    networks:
+      - kubevision-network
+
+networks:
+  kubevision-network:
+    driver: bridge
+
