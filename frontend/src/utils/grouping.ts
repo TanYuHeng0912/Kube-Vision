@@ -28,11 +28,12 @@ export function groupContainers(containers: ContainerInfo[], groupBy: string): G
                    container.labels?.['com.environment'] ||
                    'Uncategorized';
         break;
-      case 'image':
+      case 'image': {
         // Extract image name without tag
         const imageName = container.image.split(':')[0];
         groupKey = imageName || 'Unknown';
         break;
+      }
       case 'state':
         groupKey = container.state || 'unknown';
         break;

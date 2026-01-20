@@ -42,9 +42,9 @@ func StatsHandler(dockerClient interface {
 		defer conn.Close()
 
 		// Set connection parameters
-		conn.SetReadDeadline(time.Now().Add(PongWait))
+		_ = conn.SetReadDeadline(time.Now().Add(PongWait))
 		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(PongWait))
+			_ = conn.SetReadDeadline(time.Now().Add(PongWait))
 			return nil
 		})
 
@@ -128,7 +128,7 @@ func StatsHandler(dockerClient interface {
 				case <-ctx.Done():
 					return
 				case <-pingTicker.C:
-					conn.SetWriteDeadline(time.Now().Add(WriteWait))
+					_ = conn.SetWriteDeadline(time.Now().Add(WriteWait))
 					if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 						return
 					}
@@ -142,9 +142,9 @@ func StatsHandler(dockerClient interface {
 			case <-ctx.Done():
 				return
 			case stats, ok := <-statsChan:
-				conn.SetWriteDeadline(time.Now().Add(WriteWait))
+				_ = conn.SetWriteDeadline(time.Now().Add(WriteWait))
 				if !ok {
-					conn.WriteMessage(websocket.CloseMessage, []byte{})
+					_ = conn.WriteMessage(websocket.CloseMessage, []byte{})
 					return
 				}
 

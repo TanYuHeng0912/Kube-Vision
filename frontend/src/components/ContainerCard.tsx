@@ -28,8 +28,17 @@ function ContainerCard({ container }: ContainerCardProps) {
 
   const { status } = useWebSocket({
     url: wsUrl,
-    onMessage: (data: ContainerMetrics) => {
-      addMetrics(container.id, data);
+    onMessage: (data: unknown) => {
+      // Type guard to ensure data is ContainerMetrics
+      if (
+        data &&
+        typeof data === 'object' &&
+        'container_id' in data &&
+        'cpu_percent' in data &&
+        'memory_usage' in data
+      ) {
+        addMetrics(container.id, data as ContainerMetrics);
+      }
     },
     reconnect: true,
   });

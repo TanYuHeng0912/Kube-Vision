@@ -29,6 +29,7 @@ class MockWebSocket {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   send(_data: string) {
     // Mock send
   }
@@ -41,12 +42,14 @@ describe('useWebSocket', () => {
     // Store original WebSocket
     originalWebSocket = globalThis.WebSocket;
     // Replace global WebSocket
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).WebSocket = MockWebSocket;
     vi.useFakeTimers();
   });
 
   afterEach(() => {
     // Restore original WebSocket
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).WebSocket = originalWebSocket;
     vi.useRealTimers();
   });

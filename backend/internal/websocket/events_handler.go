@@ -35,9 +35,9 @@ func EventsHandler(dockerClient interface {
 		defer conn.Close()
 
 		// Set connection parameters
-		conn.SetReadDeadline(time.Now().Add(PongWait))
+		_ = conn.SetReadDeadline(time.Now().Add(PongWait))
 		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(PongWait))
+			_ = conn.SetReadDeadline(time.Now().Add(PongWait))
 			return nil
 		})
 
@@ -77,7 +77,7 @@ func EventsHandler(dockerClient interface {
 				case <-ctx.Done():
 					return
 				case <-pingTicker.C:
-					conn.SetWriteDeadline(time.Now().Add(WriteWait))
+					_ = conn.SetWriteDeadline(time.Now().Add(WriteWait))
 					if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 						return
 					}
@@ -93,8 +93,8 @@ func EventsHandler(dockerClient interface {
 			case err := <-errChan:
 				if err != nil {
 					logger.Error("Docker events error", zap.Error(err))
-					conn.SetWriteDeadline(time.Now().Add(WriteWait))
-					conn.WriteJSON(gin.H{"error": "Events stream error"})
+					_ = conn.SetWriteDeadline(time.Now().Add(WriteWait))
+					_ = conn.WriteJSON(gin.H{"error": "Events stream error"})
 					return
 				}
 			case event := <-eventChan:
@@ -112,7 +112,7 @@ func EventsHandler(dockerClient interface {
 					dockerEvent.Actor["Attributes"] = event.Actor.Attributes
 				}
 
-				conn.SetWriteDeadline(time.Now().Add(WriteWait))
+				_ = conn.SetWriteDeadline(time.Now().Add(WriteWait))
 				if err := conn.WriteJSON(dockerEvent); err != nil {
 					logger.Error("Failed to write event", zap.Error(err))
 					return

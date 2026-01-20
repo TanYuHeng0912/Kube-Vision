@@ -24,7 +24,7 @@ export default function LogTerminal({ containerId, visible = true }: LogTerminal
 
   const { status } = useWebSocket({
     url: wsUrl,
-    onMessage: (data: any) => {
+    onMessage: (data: unknown) => {
       if (terminalInstanceRef.current) {
         // Handle both string and ArrayBuffer
         if (typeof data === 'string') {
@@ -119,23 +119,18 @@ export default function LogTerminal({ containerId, visible = true }: LogTerminal
       return true;
     });
 
-    // Auto-scroll handling - use ref to avoid re-creating terminal
+    // Auto-scroll handling - capture viewport element to avoid stale closure
+    const viewportElement = terminalRef.current?.querySelector('.xterm-viewport') as HTMLElement | null;
     const handleScroll = () => {
-      if (terminalRef.current) {
-        const element = terminalRef.current.querySelector('.xterm-viewport');
-        if (element) {
-          const isAtBottom =
-            element.scrollTop + element.clientHeight >= element.scrollHeight - 10;
-          autoScrollRef.current = isAtBottom;
-        }
+      if (viewportElement) {
+        const isAtBottom =
+          viewportElement.scrollTop + viewportElement.clientHeight >= viewportElement.scrollHeight - 10;
+        autoScrollRef.current = isAtBottom;
       }
     };
 
-    if (terminalRef.current) {
-      const viewport = terminalRef.current.querySelector('.xterm-viewport');
-      if (viewport) {
-        viewport.addEventListener('scroll', handleScroll);
-      }
+    if (viewportElement) {
+      viewportElement.addEventListener('scroll', handleScroll);
     }
 
     // Auto-scroll to bottom when new data arrives
@@ -152,11 +147,9 @@ export default function LogTerminal({ containerId, visible = true }: LogTerminal
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (terminalRef.current) {
-        const viewport = terminalRef.current.querySelector('.xterm-viewport');
-        if (viewport) {
-          viewport.removeEventListener('scroll', handleScroll);
-        }
+      // Use captured viewport element from closure
+      if (viewportElement) {
+        viewportElement.removeEventListener('scroll', handleScroll);
       }
       terminal.dispose();
       terminalInstanceRef.current = null;

@@ -62,10 +62,10 @@ export const api = {
   },
 
   // Get container by ID
-  async getContainer(id: string): Promise<any> {
+  async getContainer(id: string): Promise<Record<string, unknown>> {
     return retry(
       async () => {
-        const response = await apiClient.get<APIResponse<any>>(`/api/containers/${id}`);
+        const response = await apiClient.get<APIResponse<Record<string, unknown>>>(`/api/containers/${id}`);
         if (response.data.success && response.data.data) {
           return response.data.data;
         }
@@ -89,10 +89,10 @@ export const api = {
     );
   },
 
-  async getImage(id: string): Promise<any> {
+  async getImage(id: string): Promise<Record<string, unknown>> {
     return retry(
       async () => {
-        const response = await apiClient.get<APIResponse<any>>(`/api/images/${id}`);
+        const response = await apiClient.get<APIResponse<Record<string, unknown>>>(`/api/images/${id}`);
         if (response.data.success && response.data.data) {
           return response.data.data;
         }

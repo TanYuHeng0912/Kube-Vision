@@ -47,9 +47,9 @@ func LogsHandler(dockerClient interface {
 		defer conn.Close()
 
 		// Set connection parameters
-		conn.SetReadDeadline(time.Now().Add(PongWait))
+		_ = conn.SetReadDeadline(time.Now().Add(PongWait))
 		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(PongWait))
+			_ = conn.SetReadDeadline(time.Now().Add(PongWait))
 			return nil
 		})
 
@@ -76,7 +76,7 @@ func LogsHandler(dockerClient interface {
 			logger.Error("Failed to get container logs",
 				zap.String("container_id", containerID),
 				zap.Error(err))
-			conn.WriteJSON(gin.H{"error": "Failed to get logs"})
+			_ = conn.WriteJSON(gin.H{"error": "Failed to get logs"})
 			return
 		}
 		defer logsReader.Close()
@@ -111,7 +111,7 @@ func LogsHandler(dockerClient interface {
 				processedData := stripDockerHeader(data)
 
 				if len(processedData) > 0 {
-					conn.SetWriteDeadline(time.Now().Add(WriteWait))
+					_ = conn.SetWriteDeadline(time.Now().Add(WriteWait))
 					if err := conn.WriteMessage(websocket.TextMessage, processedData); err != nil {
 						logger.Error("Failed to write logs",
 							zap.String("container_id", containerID),

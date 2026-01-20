@@ -7,10 +7,10 @@ export interface RetryOptions {
   initialDelay?: number;
   maxDelay?: number;
   backoffMultiplier?: number;
-  retryable?: (error: any) => boolean;
+  retryable?: (error: unknown) => boolean;
 }
 
-const defaultOptions: Required<Omit<RetryOptions, 'retryable'>> & { retryable?: (error: any) => boolean } = {
+const defaultOptions: Required<Omit<RetryOptions, 'retryable'>> & { retryable?: (error: unknown) => boolean } = {
   maxAttempts: 3,
   initialDelay: 1000,
   maxDelay: 30000,
@@ -25,7 +25,7 @@ export async function retry<T>(
   options: RetryOptions = {}
 ): Promise<T> {
   const opts = { ...defaultOptions, ...options };
-  let lastError: any;
+  let lastError: unknown;
 
   for (let attempt = 1; attempt <= opts.maxAttempts; attempt++) {
     try {
@@ -59,22 +59,31 @@ export async function retry<T>(
 /**
  * Check if an error is retryable (network errors, timeouts, 5xx errors)
  */
-export function isRetryableError(error: any): boolean {
+export function isRetryableError(error: unknown): boolean {
   // Network errors
-  if (error?.code === 'ECONNREFUSED' || error?.code === 'ETIMEDOUT') {
-    return true;
+  if (error && typeof error === 'object' && 'code' in error) {
+    const code = (error as { code?: string }).code;
+    if (code === 'ECONNREFUSED' || code === 'ETIMEDOUT') {
+      return true;
+    }
   }
 
   // Axios errors
-  if (error?.response) {
-    const status = error.response.status;
-    // Retry on 5xx errors and 429 (Too Many Requests)
-    return status >= 500 || status === 429;
+  if (error && typeof error === 'object' && 'response' in error) {
+    const response = (error as { response?: { status?: number } }).response;
+    if (response?.status !== undefined) {
+      const status = response.status;
+      // Retry on 5xx errors and 429 (Too Many Requests)
+      return status >= 500 || status === 429;
+    }
   }
 
   // Timeout errors
-  if (error?.message?.includes('timeout')) {
-    return true;
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = (error as { message?: string }).message;
+    if (typeof message === 'string' && message.includes('timeout')) {
+      return true;
+    }
   }
 
   return false;

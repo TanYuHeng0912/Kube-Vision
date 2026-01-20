@@ -23,11 +23,15 @@ export default function EventsStream() {
 
   const { status } = useWebSocket({
     url: wsUrl,
-    onMessage: (data: DockerEvent) => {
-      setEvents((prev) => {
-        const newEvents = [data, ...prev];
-        return newEvents.slice(0, 500); // Keep last 500 events
-      });
+    onMessage: (data: unknown) => {
+      // Type guard to ensure data is a DockerEvent
+      if (data && typeof data === 'object' && 'type' in data && 'action' in data && 'time' in data) {
+        const event = data as DockerEvent;
+        setEvents((prev) => {
+          const newEvents = [event, ...prev];
+          return newEvents.slice(0, 500); // Keep last 500 events
+        });
+      }
     },
     reconnect: true,
   });
@@ -167,5 +171,8 @@ export default function EventsStream() {
     </div>
   );
 }
+
+
+
 
 

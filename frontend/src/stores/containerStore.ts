@@ -69,6 +69,7 @@ export const useContainerStore = create<ContainerState>((set) => ({
 
   clearMetrics: (containerId) =>
     set((state) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [containerId]: _, ...rest } = state.metrics;
       return { metrics: rest };
     }),
