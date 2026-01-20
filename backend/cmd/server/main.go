@@ -28,9 +28,7 @@ func main() {
 		panic(fmt.Sprintf("Failed to initialize logger: %v", err))
 	}
 	defer func() {
-		if err := logger.Sync(); err != nil {
-			// Ignore sync errors in production (common on Windows)
-		}
+		_ = logger.Sync() // Ignore sync errors in production (common on Windows)
 	}()
 
 	// Load configuration
@@ -273,10 +271,7 @@ func loadConfig() error {
 	viper.AutomaticEnv()
 
 	// Try to read config file (optional)
-	if err := viper.ReadInConfig(); err != nil {
-		// Config file is optional, so we ignore the error
-		// viper will use defaults and environment variables
-	}
+	_ = viper.ReadInConfig() // Config file is optional, viper will use defaults and environment variables
 
 	return nil
 }

@@ -118,11 +118,13 @@ func (sc *StatsCalculator) calculateCPUPercent(prevStats, currStats *container.S
 	)
 
 	// Calculate deltas
+	// Note: deltaCPU can be negative if counter wraps, but since it's uint64,
+	// we check if currCPU < prevCPU instead (which indicates wrap-around)
 	deltaCPU := currCPU - prevCPU
 	deltaSystem := currSystem - prevSystem
 
 	// Handle edge cases
-	if deltaSystem == 0 || deltaCPU < 0 {
+	if deltaSystem == 0 || currCPU < prevCPU {
 		return 0.0
 	}
 
