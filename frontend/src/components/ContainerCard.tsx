@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { useContainerStore, ContainerMetrics } from '../stores/containerStore';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
@@ -13,10 +13,11 @@ interface ContainerCardProps {
     image: string;
     status: string;
     state: string;
+    labels?: Record<string, string>;
   };
 }
 
-export default function ContainerCard({ container }: ContainerCardProps) {
+function ContainerCard({ container }: ContainerCardProps) {
   const { addMetrics } = useContainerStore();
   const [cardRef, isVisible] = useIntersectionObserver<HTMLDivElement>();
   const [showDetail, setShowDetail] = useState(false);
@@ -127,4 +128,14 @@ export default function ContainerCard({ container }: ContainerCardProps) {
     </div>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export default memo(ContainerCard, (prevProps, nextProps) => {
+  // Only re-render if container properties change
+  return (
+    prevProps.container.id === nextProps.container.id &&
+    prevProps.container.state === nextProps.container.state &&
+    prevProps.container.status === nextProps.container.status
+  );
+});
 

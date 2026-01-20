@@ -31,7 +31,7 @@ describe('ContainerStore', () => {
     expect(storedMetrics[0].cpu_percent).toBe(50.5);
   });
 
-  it('should limit metrics to 60 data points', () => {
+  it('should limit metrics to 10 data points', () => {
     const metrics: ContainerMetrics = {
       container_id: 'test-container',
       timestamp: new Date().toISOString(),
@@ -46,8 +46,8 @@ describe('ContainerStore', () => {
       pids: 10,
     };
 
-    // Add 70 metrics
-    for (let i = 0; i < 70; i++) {
+    // Add 20 metrics (more than the limit of 10)
+    for (let i = 0; i < 20; i++) {
       useContainerStore.getState().addMetrics('test-container', {
         ...metrics,
         cpu_percent: i,
@@ -55,10 +55,10 @@ describe('ContainerStore', () => {
     }
 
     const storedMetrics = useContainerStore.getState().metrics['test-container'] || [];
-    expect(storedMetrics).toHaveLength(60);
-    // Should keep the most recent 60
-    expect(storedMetrics[0].cpu_percent).toBe(10); // First of the last 60
-    expect(storedMetrics[59].cpu_percent).toBe(69); // Last one
+    expect(storedMetrics).toHaveLength(10);
+    // Should keep the most recent 10
+    expect(storedMetrics[0].cpu_percent).toBe(10); // First of the last 10
+    expect(storedMetrics[9].cpu_percent).toBe(19); // Last one
   });
 
   it('should clear metrics for a specific container', () => {

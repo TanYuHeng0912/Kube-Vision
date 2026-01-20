@@ -15,7 +15,7 @@ services:
       - HOST=0.0.0.0
       - LOG_LEVEL=info
       - AUTH_ENABLED=false
-      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:8080
       - RATE_LIMIT_ENABLED=true
       - RATE_LIMIT_REQUESTS=100
       - RATE_LIMIT_DURATION=1m

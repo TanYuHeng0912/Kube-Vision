@@ -135,6 +135,16 @@ func main() {
 			controlGroup.POST("/pause", controlHandler.PauseContainer)
 			controlGroup.POST("/unpause", controlHandler.UnpauseContainer)
 		}
+
+		// Image routes
+		imageHandler := api.NewImageHandler(dockerClient.GetRawClient(), logger)
+		apiGroup.GET("/images", imageHandler.ListImages)
+		apiGroup.GET("/images/:id", imageHandler.GetImage)
+		imageControlGroup := apiGroup.Group("/images/:id")
+		imageControlGroup.Use(middleware.AuthMiddleware(authEnabled, authToken))
+		{
+			imageControlGroup.DELETE("", imageHandler.RemoveImage)
+		}
 	}
 
 	// WebSocket routes (must be before static files)
@@ -146,6 +156,10 @@ func main() {
 			logger,
 		))
 		wsGroup.GET("/logs/:id", websocket.LogsHandler(
+			dockerClient.GetRawClient(),
+			logger,
+		))
+		wsGroup.GET("/events", websocket.EventsHandler(
 			dockerClient.GetRawClient(),
 			logger,
 		))

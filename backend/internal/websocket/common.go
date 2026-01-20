@@ -9,16 +9,16 @@ import (
 )
 
 const (
-	// Time allowed to write a message to the peer
+	// WriteWait is the time allowed to write a message to the peer
 	WriteWait = 10 * time.Second
 
-	// Time allowed to read the next pong message from the peer
+	// PongWait is the time allowed to read the next pong message from the peer
 	PongWait = 60 * time.Second
 
-	// Send pings to peer with this period (must be less than pongWait)
+	// PingPeriod is the period to send pings to peer (must be less than pongWait)
 	PingPeriod = (PongWait * 9) / 10
 
-	// Maximum message size allowed from peer
+	// MaxMessageSize is the maximum message size allowed from peer
 	MaxMessageSize = 512
 )
 
@@ -34,10 +34,22 @@ func GetUpgrader() websocket.Upgrader {
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
 			origin := r.Header.Get("Origin")
+			// If no origin header (same-origin request), allow it
+			if origin == "" {
+				return true
+			}
+			
 			// Allow if origin is in allowed list or if wildcard is set
 			for _, allowed := range allowedOrigins {
 				if allowed == "*" || allowed == origin {
 					return true
+				}
+				// Also allow if origin matches the request host (for same-origin)
+				if r.Host != "" {
+					hostOrigin := "http://" + r.Host
+					if allowed == hostOrigin || origin == hostOrigin {
+						return true
+					}
 				}
 			}
 			return false

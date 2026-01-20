@@ -74,7 +74,52 @@ export const api = {
       { retryable: isRetryableError }
     );
   },
+
+  // Image management
+  async getImages(): Promise<ImageInfo[]> {
+    return retry(
+      async () => {
+        const response = await apiClient.get<APIResponse<ImageInfo[]>>('/api/images');
+        if (response.data.success && response.data.data) {
+          return response.data.data;
+        }
+        throw new Error(response.data.error || 'Failed to fetch images');
+      },
+      { retryable: isRetryableError }
+    );
+  },
+
+  async getImage(id: string): Promise<any> {
+    return retry(
+      async () => {
+        const response = await apiClient.get<APIResponse<any>>(`/api/images/${id}`);
+        if (response.data.success && response.data.data) {
+          return response.data.data;
+        }
+        throw new Error(response.data.error || 'Failed to fetch image');
+      },
+      { retryable: isRetryableError }
+    );
+  },
+
+  async removeImage(id: string, force: boolean = false): Promise<void> {
+    return retry(
+      async () => {
+        await apiClient.delete(`/api/images/${id}?force=${force}`);
+      },
+      { retryable: isRetryableError }
+    );
+  },
 };
+
+export interface ImageInfo {
+  id: string;
+  repo_tags: string[];
+  repo_digests: string[];
+  size: number;
+  created: string;
+  labels: Record<string, string>;
+}
 
 export default api;
 

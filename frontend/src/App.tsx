@@ -1,11 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useContainerStore } from './stores/containerStore';
-import { api } from './services/api';
+import { api, ContainerInfo } from './services/api';
 import ContainerCard from './components/ContainerCard';
 import ErrorBoundary from './components/ErrorBoundary';
+import SearchAndFilter from './components/SearchAndFilter';
+import ImageList from './components/ImageList';
+import EventsStream from './components/EventsStream';
+import { groupContainers } from './utils/grouping';
 
 function App() {
   const { containers, setContainers, setLoading, setError } = useContainerStore();
+  const [filteredContainers, setFilteredContainers] = useState<ContainerInfo[]>([]);
+  const [groupBy, setGroupBy] = useState<string>('none');
+  const [activeTab, setActiveTab] = useState<'containers' | 'images' | 'events'>('containers');
 
   useEffect(() => {
     const fetchContainers = async () => {
@@ -14,6 +21,7 @@ function App() {
         setError(null);
         const data = await api.getContainers();
         setContainers(data);
+        setFilteredContainers(data);
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Failed to fetch containers');
         console.error('Error fetching containers:', error);
@@ -31,6 +39,10 @@ function App() {
 
   const { isLoading, error } = useContainerStore();
 
+  const groupedContainers = useMemo(() => {
+    return groupContainers(filteredContainers, groupBy);
+  }, [filteredContainers, groupBy]);
+
   if (isLoading && containers.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
@@ -46,6 +58,35 @@ function App() {
       </div>
     );
   }
+
+  const renderContainers = () => {
+    if (groupBy === 'none') {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredContainers.map((container) => (
+            <ContainerCard key={container.id} container={container} />
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-8">
+        {Object.entries(groupedContainers).map(([groupName, groupContainers]) => (
+          <div key={groupName}>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+              {groupName} <span className="text-sm font-normal text-gray-500">({groupContainers.length})</span>
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {groupContainers.map((container) => (
+                <ContainerCard key={container.id} container={container} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <ErrorBoundary>
@@ -69,17 +110,69 @@ function App() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {containers.map((container) => (
-            <ContainerCard key={container.id} container={container} />
-          ))}
+        {/* Tabs */}
+        <div className="mb-6 border-b border-gray-200">
+          <nav className="flex gap-4">
+            <button
+              onClick={() => setActiveTab('containers')}
+              className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+                activeTab === 'containers'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Containers
+            </button>
+            <button
+              onClick={() => setActiveTab('images')}
+              className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+                activeTab === 'images'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Images
+            </button>
+            <button
+              onClick={() => setActiveTab('events')}
+              className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+                activeTab === 'events'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Events
+            </button>
+          </nav>
         </div>
 
-        {containers.length === 0 && (
-          <div className="text-center text-gray-500 mt-12 font-medium">
-            No containers found. Start some Docker containers to see them here.
-          </div>
+        {/* Containers Tab */}
+        {activeTab === 'containers' && (
+          <>
+            <SearchAndFilter
+              containers={containers}
+              onFiltered={setFilteredContainers}
+              onGroupChange={setGroupBy}
+            />
+            {renderContainers()}
+            {filteredContainers.length === 0 && containers.length > 0 && (
+              <div className="text-center text-gray-500 mt-12 font-medium">
+                No containers match your filters.
+              </div>
+            )}
+            {containers.length === 0 && (
+              <div className="text-center text-gray-500 mt-12 font-medium">
+                No containers found. Start some Docker containers to see them here.
+              </div>
+            )}
+          </>
         )}
+
+        {/* Images Tab */}
+        {activeTab === 'images' && <ImageList />}
+
+        {/* Events Tab */}
+        {activeTab === 'events' && <EventsStream />}
       </div>
     </div>
     </ErrorBoundary>
