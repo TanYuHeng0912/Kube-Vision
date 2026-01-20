@@ -10,6 +10,8 @@ import (
 
 // getStaticFileSystem returns a filesystem-based static file system
 // Used when frontend is not embedded (development mode)
+// This function is kept for potential future use
+//nolint:unused
 func getStaticFileSystem() http.FileSystem {
 	// Check if web/dist exists
 	if _, err := os.Stat("web/dist"); os.IsNotExist(err) {

@@ -13,6 +13,8 @@ import (
 var staticFiles embed.FS
 
 // getStaticFileSystem returns the embedded static file system
+// This function is kept for potential future use
+//nolint:unused
 func getStaticFileSystem() http.FileSystem {
 	// Extract the embedded filesystem
 	fsys, err := fs.Sub(staticFiles, "web/dist")

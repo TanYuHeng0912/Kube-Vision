@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -17,16 +17,16 @@ import (
 // ContainerHandler handles container-related API endpoints
 type ContainerHandler struct {
 	dockerClient interface {
-		ContainerList(ctx context.Context, options container.ListOptions) ([]types.Container, error)
-		ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
+		ContainerList(ctx context.Context, options container.ListOptions) ([]container.Summary, error)
+		ContainerInspect(ctx context.Context, containerID string) (container.InspectResponse, error)
 	}
 	logger *zap.Logger
 }
 
 // NewContainerHandler creates a new container handler
 func NewContainerHandler(dockerClient interface {
-	ContainerList(ctx context.Context, options container.ListOptions) ([]types.Container, error)
-	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
+	ContainerList(ctx context.Context, options container.ListOptions) ([]container.Summary, error)
+	ContainerInspect(ctx context.Context, containerID string) (container.InspectResponse, error)
 }, logger *zap.Logger) *ContainerHandler {
 	return &ContainerHandler{
 		dockerClient: dockerClient,
@@ -93,10 +93,7 @@ func (h *ContainerHandler) ListContainers(c *gin.Context) {
 		// Get container name (first name in Names slice, remove leading /)
 		name := container.ID[:12] // Default to short ID if no name
 		if len(container.Names) > 0 && len(container.Names[0]) > 0 {
-			name = container.Names[0]
-			if name[0] == '/' {
-				name = name[1:]
-			}
+			name = strings.TrimPrefix(container.Names[0], "/")
 		}
 
 		// Convert ports

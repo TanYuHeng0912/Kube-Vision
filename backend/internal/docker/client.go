@@ -71,6 +71,8 @@ func (dc *DockerClient) GetRawClient() *client.Client {
 }
 
 // getDockerHost retrieves Docker host from environment or defaults to Unix socket
+// This function is kept for potential future use
+//nolint:unused
 func getDockerHost() string {
 	// Check environment variable first
 	if host := os.Getenv("DOCKER_HOST"); host != "" {

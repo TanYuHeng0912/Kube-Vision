@@ -2,31 +2,31 @@ package api
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"go.uber.org/zap"
 )
 
 // Mock Docker client for testing
 type mockDockerClient struct {
-	containers []types.Container
-	container  types.ContainerJSON
+	containers []container.Summary
+	container  container.InspectResponse
 	err        error
 }
 
-func (m *mockDockerClient) ContainerList(ctx context.Context, options container.ListOptions) ([]types.Container, error) {
+func (m *mockDockerClient) ContainerList(ctx context.Context, options container.ListOptions) ([]container.Summary, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
 	return m.containers, nil
 }
 
-func (m *mockDockerClient) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+func (m *mockDockerClient) ContainerInspect(ctx context.Context, containerID string) (container.InspectResponse, error) {
 	if m.err != nil {
-		return types.ContainerJSON{}, m.err
+		return container.InspectResponse{}, m.err
 	}
 	return m.container, nil
 }
@@ -35,7 +35,7 @@ func TestNewContainerHandler(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 
 	mockClient := &mockDockerClient{
-		containers: []types.Container{
+		containers: []container.Summary{
 			{
 				ID:      "container-1",
 				Names:   []string{"/test-container"},
@@ -43,7 +43,7 @@ func TestNewContainerHandler(t *testing.T) {
 				Status:  "Up 5 minutes",
 				State:   "running",
 				Created: time.Now().Unix(),
-				Ports: []types.Port{
+				Ports: []container.Port{
 					{
 						PrivatePort: 80,
 						PublicPort:  8080,
@@ -103,23 +103,20 @@ func TestContainerInfo_Conversion(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			container := types.Container{
+			ctr := container.Summary{
 				ID:    "test-id",
 				Names: tc.names,
 			}
 
 			var result string
-			if len(container.Names) > 0 && len(container.Names[0]) > 0 {
-				result = container.Names[0]
-				if result[0] == '/' {
-					result = result[1:]
-				}
+			if len(ctr.Names) > 0 && len(ctr.Names[0]) > 0 {
+				result = strings.TrimPrefix(ctr.Names[0], "/")
 			} else {
 				// Use full ID or first 12 characters, whichever is shorter
-				if len(container.ID) >= 12 {
-					result = container.ID[:12]
+				if len(ctr.ID) >= 12 {
+					result = ctr.ID[:12]
 				} else {
-					result = container.ID
+					result = ctr.ID
 				}
 			}
 
