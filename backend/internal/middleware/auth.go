@@ -29,9 +29,7 @@ func AuthMiddleware(authEnabled bool, authToken string) gin.HandlerFunc {
 
 		// Extract token (format: "Bearer <token>" or just "<token>")
 		token := strings.TrimSpace(authHeader)
-		if strings.HasPrefix(token, "Bearer ") {
-			token = strings.TrimPrefix(token, "Bearer ")
-		}
+		token = strings.TrimPrefix(token, "Bearer ")
 
 		// Validate token
 		if token != authToken {
