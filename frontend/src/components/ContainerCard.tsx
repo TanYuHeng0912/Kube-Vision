@@ -35,58 +35,73 @@ export default function ContainerCard({ container }: ContainerCardProps) {
   const getStatusColor = () => {
     switch (container.state) {
       case 'running':
-        return 'bg-green-500';
+        return 'bg-emerald-500';
       case 'exited':
         return 'bg-red-500';
       case 'paused':
-        return 'bg-yellow-500';
+        return 'bg-amber-500';
       default:
-        return 'bg-gray-500';
+        return 'bg-gray-400';
     }
   };
 
   const getConnectionStatusColor = () => {
     switch (status) {
       case 'connected':
-        return 'bg-green-500';
+        return 'bg-emerald-500';
       case 'connecting':
-        return 'bg-yellow-500';
+        return 'bg-amber-400';
       case 'error':
       case 'disconnected':
         return 'bg-red-500';
       default:
-        return 'bg-gray-500';
+        return 'bg-gray-400';
+    }
+  };
+
+  const getStatusBadgeColor = () => {
+    switch (container.state) {
+      case 'running':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'exited':
+        return 'bg-red-50 text-red-700 border-red-200';
+      case 'paused':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   return (
     <div
       ref={cardRef}
-      className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700"
+      className="bg-white rounded-xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition-all duration-300"
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-3 h-3 rounded-full ${getStatusColor()}`} />
-          <h3 className="text-xl font-semibold text-white">{container.name}</h3>
+          <h3 className="text-xl font-semibold text-gray-800">{container.name}</h3>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
           <div className={`w-2 h-2 rounded-full ${getConnectionStatusColor()}`} />
-          <span className="text-xs text-gray-400">{status}</span>
+          <span className="text-xs text-blue-600 font-medium capitalize">{status}</span>
         </div>
       </div>
 
-      <div className="mb-4 space-y-2 text-sm text-gray-300">
-        <div className="flex justify-between">
-          <span>Image:</span>
-          <span className="text-gray-400">{container.image}</span>
+      <div className="mb-4 space-y-2 text-sm">
+        <div className="flex justify-between py-2 px-3 rounded-lg bg-gray-50">
+          <span className="text-gray-600">Image:</span>
+          <span className="text-gray-800">{container.image}</span>
+        </div>
+        <div className="flex justify-between py-2 px-3 rounded-lg bg-gray-50">
+          <span className="text-gray-600">Status:</span>
+          <span className="text-gray-800">{container.status}</span>
         </div>
         <div className="flex justify-between">
-          <span>Status:</span>
-          <span className="text-gray-400">{container.status}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>State:</span>
-          <span className="text-gray-400 capitalize">{container.state}</span>
+          <span className="text-gray-600">State:</span>
+          <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusBadgeColor()}`}>
+            {container.state}
+          </span>
         </div>
       </div>
 
@@ -95,7 +110,7 @@ export default function ContainerCard({ container }: ContainerCardProps) {
       <div className="mt-4 flex gap-2">
         <button
           onClick={() => setShowDetail(true)}
-          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-semibold shadow-sm"
         >
           View Details
         </button>

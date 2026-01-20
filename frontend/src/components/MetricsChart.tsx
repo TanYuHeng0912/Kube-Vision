@@ -1,19 +1,55 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { useContainerStore } from '../stores/containerStore';
 
 interface MetricsChartProps {
   containerId: string;
+  showFullTime?: boolean; // If true, show full time format in detail view
 }
 
-export default function MetricsChart({ containerId }: MetricsChartProps) {
+export default function MetricsChart({ containerId, showFullTime = false }: MetricsChartProps) {
   const metrics = useContainerStore((state) => state.metrics[containerId] || []);
   const chartRef = useRef<ReactECharts>(null);
 
-  const cpuData = metrics.map((m) => [m.timestamp, m.cpu_percent]);
-  const memoryData = metrics.map((m) => [m.timestamp, m.memory_percent]);
+  // Process metrics - keep last 10 points
+  const processedData = useMemo(() => {
+    if (metrics.length === 0) return { cpuData: [], memoryData: [] };
 
-  const option = {
+    const now = Date.now();
+    // Keep last 10 seconds of data
+    const filtered = metrics
+      .filter((m) => {
+        const timestamp = new Date(m.timestamp).getTime();
+        return timestamp >= now - 10000; // last 10 seconds
+      })
+      .slice(-10);
+
+    return {
+      cpuData: filtered.map((m) => [m.timestamp, m.cpu_percent]),
+      memoryData: filtered.map((m) => [m.timestamp, m.memory_percent]),
+    };
+  }, [metrics]);
+
+  // Format time label - show full time in detail view, seconds only in card view
+  const timeFormatter = useMemo(() => {
+    if (showFullTime) {
+      return (value: number) => {
+        const date = new Date(value);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+      };
+    } else {
+      // seconds only
+      return (value: number) => {
+        const date = new Date(value);
+        return `${date.getSeconds().toString().padStart(2, '0')}`;
+      };
+    }
+  }, [showFullTime]);
+
+  const option = useMemo(() => ({
     backgroundColor: 'transparent',
     grid: {
       left: '3%',
@@ -26,22 +62,31 @@ export default function MetricsChart({ containerId }: MetricsChartProps) {
       axisPointer: {
         type: 'cross',
       },
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      borderColor: '#3b82f6',
+      borderWidth: 1,
+      textStyle: {
+        color: '#1e40af',
+      },
     },
     legend: {
       data: ['CPU %', 'Memory %'],
       textStyle: {
-        color: '#fff',
+        color: '#000000',
+        fontWeight: 'bold',
       },
+      top: 10,
     },
     xAxis: {
       type: 'time',
       boundaryGap: false,
       axisLabel: {
-        color: '#999',
+        color: '#000000',
+        formatter: timeFormatter,
       },
       axisLine: {
         lineStyle: {
-          color: '#333',
+          color: '#93c5fd',
         },
       },
     },
@@ -49,17 +94,18 @@ export default function MetricsChart({ containerId }: MetricsChartProps) {
       type: 'value',
       max: 100,
       axisLabel: {
-        color: '#999',
+        color: '#000000',
         formatter: '{value}%',
       },
       axisLine: {
         lineStyle: {
-          color: '#333',
+          color: '#93c5fd',
         },
       },
       splitLine: {
         lineStyle: {
-          color: '#333',
+          color: '#dbeafe',
+          type: 'dashed',
         },
       },
     },
@@ -68,9 +114,13 @@ export default function MetricsChart({ containerId }: MetricsChartProps) {
         name: 'CPU %',
         type: 'line',
         smooth: true,
-        data: cpuData,
+        data: processedData.cpuData,
         itemStyle: {
-          color: '#5470c6',
+          color: '#f59e0b',
+        },
+        lineStyle: {
+          width: 3,
+          color: '#f59e0b',
         },
         areaStyle: {
           color: {
@@ -80,8 +130,8 @@ export default function MetricsChart({ containerId }: MetricsChartProps) {
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(84, 112, 198, 0.3)' },
-              { offset: 1, color: 'rgba(84, 112, 198, 0.1)' },
+              { offset: 0, color: 'rgba(245, 158, 11, 0.4)' },
+              { offset: 1, color: 'rgba(245, 158, 11, 0.1)' },
             ],
           },
         },
@@ -90,9 +140,13 @@ export default function MetricsChart({ containerId }: MetricsChartProps) {
         name: 'Memory %',
         type: 'line',
         smooth: true,
-        data: memoryData,
+        data: processedData.memoryData,
         itemStyle: {
-          color: '#91cc75',
+          color: '#10b981',
+        },
+        lineStyle: {
+          width: 3,
+          color: '#10b981',
         },
         areaStyle: {
           color: {
@@ -102,14 +156,14 @@ export default function MetricsChart({ containerId }: MetricsChartProps) {
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(145, 204, 117, 0.3)' },
-              { offset: 1, color: 'rgba(145, 204, 117, 0.1)' },
+              { offset: 0, color: 'rgba(16, 185, 129, 0.4)' },
+              { offset: 1, color: 'rgba(16, 185, 129, 0.1)' },
             ],
           },
         },
       },
     ],
-  };
+  }), [processedData, timeFormatter]);
 
   // Update chart with incremental data
   useEffect(() => {
@@ -117,11 +171,11 @@ export default function MetricsChart({ containerId }: MetricsChartProps) {
       const echartsInstance = chartRef.current.getEchartsInstance();
       echartsInstance.setOption(option, { notMerge: false });
     }
-  }, [metrics.length]);
+  }, [metrics.length, option]);
 
   if (metrics.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center text-gray-500">
+      <div className="h-64 flex items-center justify-center text-blue-500 font-medium">
         Waiting for metrics...
       </div>
     );

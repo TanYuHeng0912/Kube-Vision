@@ -52,9 +52,9 @@ export default function LogTerminal({ containerId, visible = true }: LogTerminal
       fontSize: 14,
       fontFamily: 'Consolas, "Courier New", monospace',
       theme: {
-        background: '#1e1e1e',
-        foreground: '#d4d4d4',
-        cursor: '#aeafad',
+        background: '#ffffff',
+        foreground: '#333333',
+        cursor: '#333333',
         black: '#000000',
         red: '#cd3131',
         green: '#0dbc79',
@@ -175,8 +175,8 @@ export default function LogTerminal({ containerId, visible = true }: LogTerminal
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
-      <div className="flex items-center justify-between p-2 bg-gray-800 border-b border-gray-700">
+    <div className="flex flex-col h-full bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between p-2 bg-gray-50 border-b border-gray-200">
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${
@@ -187,12 +187,12 @@ export default function LogTerminal({ containerId, visible = true }: LogTerminal
                 : 'bg-red-500'
             }`}
           />
-          <span className="text-xs text-gray-400">Logs - {status}</span>
+          <span className="text-xs text-gray-600">Logs - {status}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleClear}
-            className="px-2 py-1 text-xs bg-gray-700 text-white rounded hover:bg-gray-600"
+            className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Clear
           </button>
@@ -204,7 +204,7 @@ export default function LogTerminal({ containerId, visible = true }: LogTerminal
                 handleSearch(e.currentTarget.value);
               }
             }}
-            className="px-2 py-1 text-xs bg-gray-700 text-white rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+            className="px-2 py-1 text-xs bg-white text-gray-800 rounded border border-gray-300 focus:outline-none focus:border-blue-500"
           />
         </div>
       </div>

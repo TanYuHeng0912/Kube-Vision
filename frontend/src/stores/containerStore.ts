@@ -21,6 +21,7 @@ interface ContainerState {
   selectedContainer: string | null;
   isLoading: boolean;
   error: string | null;
+  timeUnit: 'seconds' | 'minutes' | 'hours';
   
   // Actions
   setContainers: (containers: ContainerInfo[]) => void;
@@ -29,10 +30,11 @@ interface ContainerState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearMetrics: (containerId: string) => void;
+  setTimeUnit: (unit: 'seconds' | 'minutes' | 'hours') => void;
 }
 
-// Keep only last 60 data points (1 minute window at 1s intervals)
-const MAX_METRICS_POINTS = 60;
+// Keep only last 10 data points (fixed window)
+const MAX_METRICS_POINTS = 10;
 
 export const useContainerStore = create<ContainerState>((set) => ({
   containers: [],
@@ -40,8 +42,11 @@ export const useContainerStore = create<ContainerState>((set) => ({
   selectedContainer: null,
   isLoading: false,
   error: null,
+  timeUnit: 'seconds',
 
   setContainers: (containers) => set({ containers }),
+
+  setTimeUnit: (unit) => set({ timeUnit: unit }),
 
   addMetrics: (containerId, newMetrics) =>
     set((state) => {

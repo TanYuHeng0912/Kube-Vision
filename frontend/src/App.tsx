@@ -32,26 +32,39 @@ function App() {
 
   if (isLoading && containers.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading containers...</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+        <div className="text-blue-700 text-xl font-semibold">Loading containers...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-red-500 text-xl">Error: {error}</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+        <div className="text-red-600 text-xl font-semibold">Error: {error}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 p-8">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">KubeVision</h1>
-          <p className="text-gray-400">Docker Container Monitoring Dashboard</p>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center shadow-md">
+                <div className="flex items-end gap-1 h-6">
+                  <div className="w-1.5 bg-white rounded-sm" style={{ height: '40%' }}></div>
+                  <div className="w-1.5 bg-white rounded-sm" style={{ height: '70%' }}></div>
+                  <div className="w-1.5 bg-white rounded-sm" style={{ height: '100%' }}></div>
+                </div>
+              </div>
+              <div>
+                <h1 className="text-5xl font-extrabold bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 bg-clip-text text-transparent mb-2 drop-shadow-sm">KubeVision</h1>
+                <p className="text-gray-600 font-medium">Docker Container Monitoring Dashboard</p>
+              </div>
+            </div>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -61,7 +74,7 @@ function App() {
         </div>
 
         {containers.length === 0 && (
-          <div className="text-center text-gray-400 mt-12">
+          <div className="text-center text-gray-500 mt-12 font-medium">
             No containers found. Start some Docker containers to see them here.
           </div>
         )}

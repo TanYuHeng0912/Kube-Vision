@@ -69,53 +69,64 @@ func StatsHandler(dockerClient interface {
 		// Channel for stats with buffer to prevent blocking
 		statsChan := make(chan *docker.ContainerStats, 100)
 
-		// Goroutine to read Docker stats
+		// Goroutine to read Docker stats using streaming API
 		go func() {
 			defer close(statsChan)
-			ticker := time.NewTicker(1 * time.Second)
-			defer ticker.Stop()
+			
+			// Use streaming API for better performance
+			stats, err := dockerClient.ContainerStats(ctx, containerID, true)
+			if err != nil {
+				logger.Error("Failed to get container stats stream",
+					zap.String("container_id", containerID),
+					zap.Error(err))
+				return
+			}
+			defer stats.Body.Close()
+
+			decoder := json.NewDecoder(stats.Body)
+			var statsJSON container.StatsResponse
+			lastSendTime := time.Now()
+			const sendInterval = 1 * time.Second
 
 			for {
 				select {
 				case <-ctx.Done():
 					return
-				case <-ticker.C:
-					// Get container stats
-					stats, err := dockerClient.ContainerStats(ctx, containerID, false)
-					if err != nil {
-						logger.Error("Failed to get container stats",
-							zap.String("container_id", containerID),
-							zap.Error(err))
+				default:
+					// Decode next stats JSON from stream
+					if err := decoder.Decode(&statsJSON); err != nil {
+						if err.Error() == "EOF" {
+							logger.Info("Stats stream ended",
+								zap.String("container_id", containerID))
+						} else {
+							logger.Error("Failed to decode stats",
+								zap.String("container_id", containerID),
+								zap.Error(err))
+						}
 						return
 					}
 
-					// Decode stats JSON
-					var statsJSON container.StatsResponse
-					if err := json.NewDecoder(stats.Body).Decode(&statsJSON); err != nil {
-						logger.Error("Failed to decode stats",
-							zap.String("container_id", containerID),
-							zap.Error(err))
-						stats.Body.Close()
-						continue
-					}
-					stats.Body.Close()
+					// Only send if enough time has passed (throttle to 1 second)
+					now := time.Now()
+					if now.Sub(lastSendTime) >= sendInterval {
+						// Calculate metrics
+						calculatedStats, err := statsCalculator.CalculateStats(containerID, &statsJSON)
+						if err != nil {
+							logger.Error("Failed to calculate stats",
+								zap.String("container_id", containerID),
+								zap.Error(err))
+							continue
+						}
 
-					// Calculate metrics
-					calculatedStats, err := statsCalculator.CalculateStats(containerID, &statsJSON)
-					if err != nil {
-						logger.Error("Failed to calculate stats",
-							zap.String("container_id", containerID),
-							zap.Error(err))
-						continue
-					}
-
-					// Send to channel (non-blocking)
-					select {
-					case statsChan <- calculatedStats:
-					default:
-						// Buffer full, skip this frame
-						logger.Warn("Stats channel buffer full, skipping frame",
-							zap.String("container_id", containerID))
+						// Send to channel (non-blocking)
+						select {
+						case statsChan <- calculatedStats:
+							lastSendTime = now
+						default:
+							// Buffer full, skip this frame
+							logger.Warn("Stats channel buffer full, skipping frame",
+								zap.String("container_id", containerID))
+						}
 					}
 				}
 			}
