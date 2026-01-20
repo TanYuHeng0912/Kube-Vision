@@ -3,7 +3,6 @@ package websocket
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 	"time"
 
 	"github.com/docker/docker/api/types/container"
@@ -12,29 +11,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/kubevision/kubevision/internal/docker"
+	"github.com/kubevision/kubevision/internal/utils"
 )
 
-const (
-	// Time allowed to write a message to the peer
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period (must be less than pongWait)
-	pingPeriod = (pongWait * 9) / 10
-
-	// Maximum message size allowed from peer
-	maxMessageSize = 512
-)
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true // In production, validate origin
-	},
-}
 
 // StatsHandler handles WebSocket connections for container stats
 func StatsHandler(dockerClient interface {
@@ -47,7 +26,14 @@ func StatsHandler(dockerClient interface {
 			return
 		}
 
+		// Validate container ID
+		if !utils.ValidateContainerID(containerID) {
+			c.JSON(400, gin.H{"error": "Invalid container ID format"})
+			return
+		}
+
 		// Upgrade connection to WebSocket
+		upgrader := GetUpgrader()
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			logger.Error("Failed to upgrade connection", zap.Error(err))
@@ -56,9 +42,9 @@ func StatsHandler(dockerClient interface {
 		defer conn.Close()
 
 		// Set connection parameters
-		conn.SetReadDeadline(time.Now().Add(pongWait))
+		conn.SetReadDeadline(time.Now().Add(PongWait))
 		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(pongWait))
+			conn.SetReadDeadline(time.Now().Add(PongWait))
 			return nil
 		})
 
@@ -133,7 +119,7 @@ func StatsHandler(dockerClient interface {
 		}()
 
 		// Goroutine to send ping messages
-		pingTicker := time.NewTicker(pingPeriod)
+		pingTicker := time.NewTicker(PingPeriod)
 		defer pingTicker.Stop()
 
 		go func() {
@@ -142,7 +128,7 @@ func StatsHandler(dockerClient interface {
 				case <-ctx.Done():
 					return
 				case <-pingTicker.C:
-					conn.SetWriteDeadline(time.Now().Add(writeWait))
+					conn.SetWriteDeadline(time.Now().Add(WriteWait))
 					if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 						return
 					}
@@ -156,7 +142,7 @@ func StatsHandler(dockerClient interface {
 			case <-ctx.Done():
 				return
 			case stats, ok := <-statsChan:
-				conn.SetWriteDeadline(time.Now().Add(writeWait))
+				conn.SetWriteDeadline(time.Now().Add(WriteWait))
 				if !ok {
 					conn.WriteMessage(websocket.CloseMessage, []byte{})
 					return

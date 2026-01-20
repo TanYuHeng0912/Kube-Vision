@@ -2,50 +2,54 @@
 
 All notable changes to KubeVision will be documented in this file.
 
-## [0.1.0] - 2024-01-XX
+## [Unreleased] - Production Enhancements
 
 ### Added
-- Initial release of KubeVision
-- Real-time container statistics via WebSocket
-- Container metrics visualization with ECharts
-- Container logs streaming with xterm.js
-- Container control operations (start, stop, restart, pause, unpause)
-- RESTful API for container management
-- WebSocket endpoints for stats and logs
-- Token-based authentication for container operations
-- CORS support
-- Docker Compose deployment
-- Multi-stage Dockerfile for production builds
-- CI/CD pipeline with GitHub Actions
-- Comprehensive documentation
+- **Security**
+  - WebSocket origin validation against configured CORS allowed origins
+  - Rate limiting middleware (token bucket algorithm, default: 100 req/min)
+  - Input validation for container IDs to prevent path traversal attacks
+  - Environment-based API/WebSocket URL configuration
 
-### Features
-- **Backend (Go)**
-  - Docker client with singleton pattern
-  - CPU and memory metrics calculation
-  - WebSocket streaming with backpressure control
-  - Graceful shutdown handling
-  - Structured logging with zap
-  - Health check endpoint
+- **Observability**
+  - Prometheus metrics endpoint (`/metrics`)
+  - Correlation ID middleware for request tracing
+  - Structured error responses with request IDs and timestamps
+  - Docker Compose health check configuration
 
-- **Frontend (React + TypeScript)**
-  - Real-time metrics charts
-  - Container list with status indicators
-  - Log terminal with search functionality
-  - Intersection Observer for performance optimization
-  - WebSocket auto-reconnection with exponential backoff
-  - Zustand state management
-  - TailwindCSS styling
+- **Frontend**
+  - React ErrorBoundary component for graceful error handling
+  - Automatic retry logic with exponential backoff for API calls
+  - Dynamic API/WebSocket URL configuration based on environment
+  - Improved error messages and user feedback
+
+- **Infrastructure**
+  - Health check endpoint monitoring in Docker Compose
+  - Configuration defaults for rate limiting
+  - Shared WebSocket constants to reduce code duplication
+
+### Changed
+- WebSocket handlers now validate container IDs
+- All API endpoints use structured error responses
+- Frontend uses environment variables for API configuration
+- Error handling improved across the application
 
 ### Security
-- Token-based authentication
-- Read-only Docker socket mount
-- Non-root user in Docker container
-- CORS configuration
+- Fixed WebSocket origin validation vulnerability
+- Added rate limiting to prevent DoS attacks
+- Added input validation to prevent injection attacks
+- Improved CORS configuration handling
 
 ### Performance
-- Optimized for 20+ containers
-- Virtual scrolling support
-- Data retention limits (60 data points)
-- Efficient WebSocket message handling
+- Optimized stats update frequency using streaming API (1 second intervals)
+- Improved error handling reduces unnecessary retries
 
+## [Previous] - Initial Release
+
+### Features
+- Real-time container monitoring via WebSocket
+- CPU and Memory metrics visualization
+- Container log streaming
+- Container control operations (start, stop, restart, pause, unpause)
+- Responsive UI with Tailwind CSS
+- Single binary deployment

@@ -4,6 +4,7 @@ import { FitAddon } from 'xterm-addon-fit';
 import { SearchAddon } from 'xterm-addon-search';
 import 'xterm/css/xterm.css';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { WS_URL } from '../config';
 
 interface LogTerminalProps {
   containerId: string;
@@ -18,7 +19,7 @@ export default function LogTerminal({ containerId, visible = true }: LogTerminal
   const autoScrollRef = useRef(true); // Use ref to track auto-scroll state without re-renders
 
   const wsUrl = visible
-    ? `ws://localhost:8080/ws/logs/${containerId}?follow=true&tail=100`
+    ? `${WS_URL}/ws/logs/${containerId}?follow=true&tail=100`
     : null;
 
   const { status } = useWebSocket({

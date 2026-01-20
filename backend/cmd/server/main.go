@@ -16,6 +16,7 @@ import (
 
 	"github.com/kubevision/kubevision/internal/api"
 	"github.com/kubevision/kubevision/internal/docker"
+	"github.com/kubevision/kubevision/internal/metrics"
 	"github.com/kubevision/kubevision/internal/middleware"
 	"github.com/kubevision/kubevision/internal/websocket"
 )
@@ -67,12 +68,32 @@ func main() {
 		)
 	}))
 
+	// Correlation ID middleware (must be first)
+	router.Use(middleware.CorrelationIDMiddleware())
+
 	// CORS middleware
 	allowedOrigins := viper.GetStringSlice("CORS_ALLOWED_ORIGINS")
 	if len(allowedOrigins) == 0 {
 		allowedOrigins = []string{"*"}
 	}
 	router.Use(middleware.CORSMiddleware(allowedOrigins))
+
+	// Rate limiting middleware
+	rateLimitEnabled := viper.GetBool("RATE_LIMIT_ENABLED")
+	if rateLimitEnabled {
+		rateLimit := viper.GetInt("RATE_LIMIT_REQUESTS")
+		if rateLimit == 0 {
+			rateLimit = 100 // Default: 100 requests per minute
+		}
+		rateLimitDuration := viper.GetDuration("RATE_LIMIT_DURATION")
+		if rateLimitDuration == 0 {
+			rateLimitDuration = 1 * time.Minute
+		}
+		router.Use(middleware.RateLimitMiddleware(rateLimit, rateLimitDuration))
+	}
+
+	// Metrics endpoint (Prometheus format)
+	router.GET("/metrics", metrics.MetricsHandler)
 
 	// Health check endpoint
 	router.GET("/api/health", func(c *gin.Context) {
@@ -142,7 +163,7 @@ func main() {
 	// Fallback for SPA routes - serve index.html for all non-API routes
 	router.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
-		if strings.HasPrefix(path, "/api") || strings.HasPrefix(path, "/ws") {
+		if strings.HasPrefix(path, "/api") || strings.HasPrefix(path, "/ws") || path == "/metrics" {
 			c.JSON(404, gin.H{"error": "Not found"})
 			return
 		}
@@ -221,6 +242,9 @@ func loadConfig() error {
 	viper.SetDefault("DOCKER_HOST", "unix:///var/run/docker.sock")
 	viper.SetDefault("AUTH_ENABLED", false)
 	viper.SetDefault("CORS_ALLOWED_ORIGINS", []string{"*"})
+	viper.SetDefault("RATE_LIMIT_ENABLED", true)
+	viper.SetDefault("RATE_LIMIT_REQUESTS", 100)
+	viper.SetDefault("RATE_LIMIT_DURATION", "1m")
 
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")

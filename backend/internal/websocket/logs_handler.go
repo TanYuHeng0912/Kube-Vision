@@ -10,7 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
+
+	"github.com/kubevision/kubevision/internal/utils"
 )
+
 
 // LogsHandler handles WebSocket connections for container logs
 func LogsHandler(dockerClient interface {
@@ -23,12 +26,19 @@ func LogsHandler(dockerClient interface {
 			return
 		}
 
+		// Validate container ID
+		if !utils.ValidateContainerID(containerID) {
+			c.JSON(400, gin.H{"error": "Invalid container ID format"})
+			return
+		}
+
 		// Get query parameters
 		tail := c.DefaultQuery("tail", "100")
 		follow := c.DefaultQuery("follow", "true") == "true"
 		since := c.DefaultQuery("since", "")
 
 		// Upgrade connection to WebSocket
+		upgrader := GetUpgrader()
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			logger.Error("Failed to upgrade connection", zap.Error(err))
@@ -37,9 +47,9 @@ func LogsHandler(dockerClient interface {
 		defer conn.Close()
 
 		// Set connection parameters
-		conn.SetReadDeadline(time.Now().Add(pongWait))
+		conn.SetReadDeadline(time.Now().Add(PongWait))
 		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(pongWait))
+			conn.SetReadDeadline(time.Now().Add(PongWait))
 			return nil
 		})
 
@@ -101,7 +111,7 @@ func LogsHandler(dockerClient interface {
 				processedData := stripDockerHeader(data)
 
 				if len(processedData) > 0 {
-					conn.SetWriteDeadline(time.Now().Add(writeWait))
+					conn.SetWriteDeadline(time.Now().Add(WriteWait))
 					if err := conn.WriteMessage(websocket.TextMessage, processedData); err != nil {
 						logger.Error("Failed to write logs",
 							zap.String("container_id", containerID),

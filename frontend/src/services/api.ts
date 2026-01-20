@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { API_URL } from '../config';
+import { retry, isRetryableError } from '../utils/retry';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_BASE_URL = API_URL;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -47,20 +49,30 @@ export const api = {
 
   // Get all containers
   async getContainers(): Promise<ContainerInfo[]> {
-    const response = await apiClient.get<APIResponse<ContainerInfo[]>>('/api/containers');
-    if (response.data.success && response.data.data) {
-      return response.data.data;
-    }
-    throw new Error(response.data.error || 'Failed to fetch containers');
+    return retry(
+      async () => {
+        const response = await apiClient.get<APIResponse<ContainerInfo[]>>('/api/containers');
+        if (response.data.success && response.data.data) {
+          return response.data.data;
+        }
+        throw new Error(response.data.error || 'Failed to fetch containers');
+      },
+      { retryable: isRetryableError }
+    );
   },
 
   // Get container by ID
   async getContainer(id: string): Promise<any> {
-    const response = await apiClient.get<APIResponse<any>>(`/api/containers/${id}`);
-    if (response.data.success && response.data.data) {
-      return response.data.data;
-    }
-    throw new Error(response.data.error || 'Failed to fetch container');
+    return retry(
+      async () => {
+        const response = await apiClient.get<APIResponse<any>>(`/api/containers/${id}`);
+        if (response.data.success && response.data.data) {
+          return response.data.data;
+        }
+        throw new Error(response.data.error || 'Failed to fetch container');
+      },
+      { retryable: isRetryableError }
+    );
   },
 };
 

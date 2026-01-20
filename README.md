@@ -298,10 +298,13 @@ npm run test:coverage
 - **Environment variables**: All secrets externalized
 - **Read-only Docker socket**: Socket mounted as read-only (`:ro`)
 - **Internal networking**: Optional Docker network isolation
-- **Health checks**: Built-in health monitoring endpoints
+- **Health checks**: Built-in health monitoring endpoints with Docker Compose healthcheck
 - **CORS configuration**: Configurable allowed origins
 - **Token-based authentication**: Optional JWT-like token auth for container operations
 - **Security options**: `no-new-privileges:true` in Docker Compose
+- **WebSocket origin validation**: Validates WebSocket connections against allowed origins
+- **Rate limiting**: Token bucket rate limiter to prevent DoS attacks (default: 100 req/min)
+- **Input validation**: Container ID validation to prevent path traversal attacks
 
 ## 🛠️ Configuration
 
@@ -321,6 +324,11 @@ LOG_LEVEL=info
 AUTH_ENABLED=false
 AUTH_TOKEN=your-secret-token-here
 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+
+# Rate Limiting (new)
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_REQUESTS=100
+RATE_LIMIT_DURATION=1m
 ```
 
 ### Frontend Environment Variables

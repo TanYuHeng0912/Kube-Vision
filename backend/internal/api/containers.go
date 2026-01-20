@@ -10,6 +10,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+
+	"github.com/kubevision/kubevision/internal/utils"
 )
 
 // ContainerHandler handles container-related API endpoints
@@ -133,11 +135,13 @@ func (h *ContainerHandler) ListContainers(c *gin.Context) {
 func (h *ContainerHandler) GetContainer(c *gin.Context) {
 	containerID := c.Param("id")
 	if containerID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success:   false,
-			Error:     "Container ID is required",
-			Timestamp: time.Now(),
-		})
+		BadRequest(c, "Container ID is required")
+		return
+	}
+
+	// Validate container ID to prevent path traversal
+	if !utils.ValidateContainerID(containerID) {
+		BadRequest(c, "Invalid container ID format")
 		return
 	}
 

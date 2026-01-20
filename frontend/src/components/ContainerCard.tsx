@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useContainerStore, ContainerMetrics } from '../stores/containerStore';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
+import { WS_URL } from '../config';
 import MetricsChart from './MetricsChart';
 import ContainerDetail from './ContainerDetail';
 
@@ -21,7 +22,7 @@ export default function ContainerCard({ container }: ContainerCardProps) {
   const [showDetail, setShowDetail] = useState(false);
 
   const wsUrl = isVisible
-    ? `ws://localhost:8080/ws/stats/${container.id}`
+    ? `${WS_URL}/ws/stats/${container.id}`
     : null;
 
   const { status } = useWebSocket({

@@ -8,6 +8,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+
+	"github.com/kubevision/kubevision/internal/utils"
 )
 
 // ContainerControlHandler handles container control operations
@@ -40,11 +42,12 @@ func NewContainerControlHandler(dockerClient interface {
 func (h *ContainerControlHandler) StartContainer(c *gin.Context) {
 	containerID := c.Param("id")
 	if containerID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success:   false,
-			Error:     "Container ID is required",
-			Timestamp: time.Now(),
-		})
+		BadRequest(c, "Container ID is required")
+		return
+	}
+
+	if !utils.ValidateContainerID(containerID) {
+		BadRequest(c, "Invalid container ID format")
 		return
 	}
 
@@ -74,11 +77,12 @@ func (h *ContainerControlHandler) StartContainer(c *gin.Context) {
 func (h *ContainerControlHandler) StopContainer(c *gin.Context) {
 	containerID := c.Param("id")
 	if containerID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success:   false,
-			Error:     "Container ID is required",
-			Timestamp: time.Now(),
-		})
+		BadRequest(c, "Container ID is required")
+		return
+	}
+
+	if !utils.ValidateContainerID(containerID) {
+		BadRequest(c, "Invalid container ID format")
 		return
 	}
 
@@ -109,11 +113,12 @@ func (h *ContainerControlHandler) StopContainer(c *gin.Context) {
 func (h *ContainerControlHandler) RestartContainer(c *gin.Context) {
 	containerID := c.Param("id")
 	if containerID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success:   false,
-			Error:     "Container ID is required",
-			Timestamp: time.Now(),
-		})
+		BadRequest(c, "Container ID is required")
+		return
+	}
+
+	if !utils.ValidateContainerID(containerID) {
+		BadRequest(c, "Invalid container ID format")
 		return
 	}
 
@@ -144,11 +149,12 @@ func (h *ContainerControlHandler) RestartContainer(c *gin.Context) {
 func (h *ContainerControlHandler) PauseContainer(c *gin.Context) {
 	containerID := c.Param("id")
 	if containerID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success:   false,
-			Error:     "Container ID is required",
-			Timestamp: time.Now(),
-		})
+		BadRequest(c, "Container ID is required")
+		return
+	}
+
+	if !utils.ValidateContainerID(containerID) {
+		BadRequest(c, "Invalid container ID format")
 		return
 	}
 
@@ -178,11 +184,12 @@ func (h *ContainerControlHandler) PauseContainer(c *gin.Context) {
 func (h *ContainerControlHandler) UnpauseContainer(c *gin.Context) {
 	containerID := c.Param("id")
 	if containerID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success:   false,
-			Error:     "Container ID is required",
-			Timestamp: time.Now(),
-		})
+		BadRequest(c, "Container ID is required")
+		return
+	}
+
+	if !utils.ValidateContainerID(containerID) {
+		BadRequest(c, "Invalid container ID format")
 		return
 	}
 

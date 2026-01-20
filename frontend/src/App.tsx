@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useContainerStore } from './stores/containerStore';
 import { api } from './services/api';
 import ContainerCard from './components/ContainerCard';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const { containers, setContainers, setLoading, setError } = useContainerStore();
@@ -47,7 +48,8 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 p-8">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 p-8">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <div className="flex items-center justify-between mb-3">
@@ -80,6 +82,7 @@ function App() {
         )}
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
 

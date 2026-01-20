@@ -5,6 +5,7 @@ go 1.24.0
 require (
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/gin-gonic/gin v1.9.1
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/spf13/viper v1.18.2
 	go.uber.org/zap v1.26.0
