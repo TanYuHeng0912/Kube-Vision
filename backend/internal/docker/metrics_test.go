@@ -185,7 +185,7 @@ func TestStatsCalculator_ClearAllStats(t *testing.T) {
 	}
 
 	// Calculate stats for multiple containers
-	_, err = calculator.CalculateStats("container-1", stats)
+	_, err := calculator.CalculateStats("container-1", stats)
 	if err != nil {
 		t.Fatalf("CalculateStats failed: %v", err)
 	}
