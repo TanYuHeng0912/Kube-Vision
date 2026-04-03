@@ -28,6 +28,16 @@ export function useWebSocket({
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Keep latest handlers without forcing reconnect when parent re-renders (new fn identity).
+  const onMessageRef = useRef(onMessage);
+  const onErrorRef = useRef(onError);
+  const onOpenRef = useRef(onOpen);
+  const onCloseRef = useRef(onClose);
+  onMessageRef.current = onMessage;
+  onErrorRef.current = onError;
+  onOpenRef.current = onOpen;
+  onCloseRef.current = onClose;
+
   const connect = useCallback(() => {
     if (!url) {
       setStatus('disconnected');
@@ -42,7 +52,7 @@ export function useWebSocket({
       ws.onopen = () => {
         setStatus('connected');
         reconnectAttemptsRef.current = 0;
-        onOpen?.();
+        onOpenRef.current?.();
       };
 
       ws.onmessage = (event) => {
@@ -50,16 +60,16 @@ export function useWebSocket({
         if (typeof event.data === 'string') {
           try {
             const data = JSON.parse(event.data);
-            onMessage?.(data);
-          } catch (error) {
+            onMessageRef.current?.(data);
+          } catch {
             // If not JSON, pass as string (for logs)
-            onMessage?.(event.data);
+            onMessageRef.current?.(event.data);
           }
         } else {
           // Binary data (for logs)
           const reader = new FileReader();
           reader.onload = () => {
-            onMessage?.(reader.result);
+            onMessageRef.current?.(reader.result);
           };
           reader.readAsText(event.data);
         }
@@ -67,12 +77,12 @@ export function useWebSocket({
 
       ws.onerror = (error) => {
         setStatus('error');
-        onError?.(error);
+        onErrorRef.current?.(error);
       };
 
       ws.onclose = () => {
         setStatus('disconnected');
-        onClose?.();
+        onCloseRef.current?.();
         wsRef.current = null;
 
         // Attempt reconnection
@@ -92,7 +102,7 @@ export function useWebSocket({
       setStatus('error');
       console.error('WebSocket connection error:', error);
     }
-  }, [url, onMessage, onError, onOpen, onClose, reconnect, reconnectInterval, maxReconnectAttempts]);
+  }, [url, reconnect, reconnectInterval, maxReconnectAttempts]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {

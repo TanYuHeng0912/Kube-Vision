@@ -18,7 +18,9 @@ interface ContainerCardProps {
 }
 
 function ContainerCard({ container }: ContainerCardProps) {
-  const { addMetrics } = useContainerStore();
+  // Selector: subscribe only to addMetrics so other containers' metric updates
+  // do not re-render this card (which would recreate useWebSocket callbacks and drop WS).
+  const addMetrics = useContainerStore((s) => s.addMetrics);
   const [cardRef, isVisible] = useIntersectionObserver<HTMLDivElement>();
   const [showDetail, setShowDetail] = useState(false);
 
